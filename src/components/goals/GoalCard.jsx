@@ -4,25 +4,9 @@ import { MoneySack } from './MoneySack.jsx'
 import { uid, useStore } from '../../state/store.jsx'
 import { inputCls } from '../ui.jsx'
 import { Logo } from '../LogoPicker.jsx'
+import { DotMatrix } from './DotMatrix.jsx'
 
-// Caveman-style dot matrix: 40 dots, filled portion green
-function DotMatrix({ progress }) {
-  const total = 40
-  const filled = Math.round(Math.min(progress, 1) * total)
-  return (
-    <div className="grid grid-cols-20 gap-1">
-      {Array.from({ length: total }, (_, i) => (
-        <div
-          key={i}
-          className="dot-cell aspect-square rounded-full"
-          style={{ backgroundColor: i < filled ? '#4ade80' : 'rgba(255,255,255,0.08)' }}
-        />
-      ))}
-    </div>
-  )
-}
-
-export function GoalCard({ goal, onEdit, onDelete }) {
+export function GoalCard({ goal, onEdit, onDelete, onOpen }) {
   const { dispatch } = useStore()
   const [amount, setAmount] = useState('')
   const [note, setNote] = useState('')
@@ -64,7 +48,11 @@ export function GoalCard({ goal, onEdit, onDelete }) {
     `${goal.currency}${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
 
   return (
-    <div ref={cardRef} className="card rounded-2xl p-5 flex flex-col gap-4 pop-in relative group">
+    <div
+      ref={cardRef}
+      onClick={() => onOpen(goal.id)}
+      className="card rounded-2xl p-5 flex flex-col gap-4 pop-in relative group cursor-pointer"
+    >
       <div className="flex items-center gap-3">
         <Logo image={goal.image} emoji={goal.emoji} />
         <div className="min-w-0">
@@ -84,7 +72,7 @@ export function GoalCard({ goal, onEdit, onDelete }) {
 
       <DotMatrix progress={progress} />
 
-      <form onSubmit={addMoney} className="flex gap-2">
+      <form onSubmit={addMoney} onClick={(e) => e.stopPropagation()} className="flex gap-2">
         <input
           type="number"
           step="any"
@@ -110,14 +98,17 @@ export function GoalCard({ goal, onEdit, onDelete }) {
 
       {goal.contributions.length > 0 && (
         <button
-          onClick={() => setShowHistory((s) => !s)}
+          onClick={(e) => {
+            e.stopPropagation()
+            setShowHistory((s) => !s)
+          }}
           className="mono text-[10px] text-white/35 hover:text-white/70 text-left transition-colors"
         >
           {showHistory ? '− hide' : '+ show'} history ({goal.contributions.length})
         </button>
       )}
       {showHistory && (
-        <ul className="flex flex-col gap-1 max-h-36 overflow-y-auto text-sm">
+        <ul onClick={(e) => e.stopPropagation()} className="flex flex-col gap-1 max-h-36 overflow-y-auto text-sm">
           {[...goal.contributions].reverse().map((c) => (
             <li key={c.id} className="flex items-center gap-2 bg-white/5 rounded-lg px-2.5 py-1.5">
               <span className="font-semibold tabular-nums">{fmt(c.amount)}</span>
@@ -138,10 +129,24 @@ export function GoalCard({ goal, onEdit, onDelete }) {
       )}
 
       <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button onClick={() => onEdit(goal)} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/15 text-xs text-white/60" title="Edit">
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onEdit(goal)
+          }}
+          className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/15 text-xs text-white/60"
+          title="Edit"
+        >
           ✎
         </button>
-        <button onClick={() => onDelete(goal.id)} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/15 text-xs text-white/60" title="Delete">
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete(goal.id)
+          }}
+          className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/15 text-xs text-white/60"
+          title="Delete"
+        >
           ✕
         </button>
       </div>

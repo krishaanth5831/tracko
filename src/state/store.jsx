@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect, useReducer } from 'react'
-import { loadState, saveState } from './storage.js'
+import { createContext, useCallback, useContext, useEffect, useReducer, useRef } from 'react'
+import { STORAGE_KEY, loadState, saveState } from './storage.js'
 
 const StoreContext = createContext(null)
 
@@ -51,11 +51,30 @@ function reducer(state, action) {
 }
 
 export function StoreProvider({ children }) {
-  const [state, dispatch] = useReducer(reducer, undefined, loadState)
+  const [state, rawDispatch] = useReducer(reducer, undefined, loadState)
+  // Only persist after a real user action — never on mount. A stale tab that
+  // merely re-renders must not clobber storage with its in-memory state.
+  const dirty = useRef(false)
+
+  const dispatch = useCallback((action) => {
+    dirty.current = true
+    rawDispatch(action)
+  }, [])
 
   useEffect(() => {
+    if (!dirty.current) return
+    dirty.current = false
     saveState(state)
   }, [state])
+
+  // Adopt changes made by other tabs of this app
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === STORAGE_KEY) rawDispatch({ type: 'IMPORT', state: loadState() })
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
 
   return <StoreContext.Provider value={{ state, dispatch }}>{children}</StoreContext.Provider>
 }

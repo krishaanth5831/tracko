@@ -1,10 +1,14 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useStore } from './state/store.jsx'
+import { useTabs } from './state/ui.js'
 import { exportState, parseImport } from './state/storage.js'
+import { TabBar } from './components/TabBar.jsx'
+import { FocusView } from './components/FocusView.jsx'
 import { EventCard } from './components/events/EventCard.jsx'
 import { EventForm } from './components/events/EventForm.jsx'
 import { GoalCard } from './components/goals/GoalCard.jsx'
 import { GoalForm } from './components/goals/GoalForm.jsx'
+import { Spline3D, SCENES } from './components/Spline3D.jsx'
 
 export default function App() {
   const { state, dispatch } = useStore()
@@ -12,6 +16,28 @@ export default function App() {
   const [pickerOpen, setPickerOpen] = useState(false)
   const fileRef = useRef(null)
 
+  const validIds = useMemo(
+    () => new Set([...state.events.map((e) => e.id), ...state.goals.map((g) => g.id)]),
+    [state.events, state.goals]
+  )
+  const tabs = useTabs(validIds)
+
+  const findItem = (id) => {
+    const event = state.events.find((e) => e.id === id)
+    if (event) return { item: event, kind: 'event' }
+    const goal = state.goals.find((g) => g.id === id)
+    if (goal) return { item: goal, kind: 'goal' }
+    return null
+  }
+
+  const openTabs = tabs.open
+    .map((id) => {
+      const found = findItem(id)
+      return found ? { id, name: found.item.name } : null
+    })
+    .filter(Boolean)
+
+  const focused = tabs.active !== 'home' ? findItem(tabs.active) : null
   const isEmpty = state.events.length === 0 && state.goals.length === 0
 
   function saveEvent(event) {
@@ -37,9 +63,11 @@ export default function App() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-5 py-10 min-h-screen flex flex-col">
-      <header className="flex items-center justify-between mb-12 flex-wrap gap-4">
-        <h1 className="mono text-sm font-bold">⏳ TRACKO</h1>
+    <div className="max-w-6xl mx-auto px-5 py-8 min-h-screen flex flex-col">
+      <header className="relative z-10 flex items-center justify-between mb-6 flex-wrap gap-4">
+        <button onClick={() => tabs.goTo('home')} className="mono text-sm font-bold hover:text-white/70 transition-colors">
+          ⏳ TRACKO
+        </button>
         <div className="flex gap-4 items-center">
           <button
             onClick={() => exportState(state)}
@@ -83,8 +111,18 @@ export default function App() {
         </div>
       </header>
 
-      {isEmpty ? (
-        <div className="text-center py-24 pop-in flex-1">
+      <TabBar tabs={openTabs} active={tabs.active} onSelect={tabs.goTo} onClose={tabs.closeTab} />
+
+      {focused ? (
+        <FocusView
+          key={focused.item.id}
+          item={focused.item}
+          kind={focused.kind}
+          onHome={() => tabs.goTo('home')}
+        />
+      ) : isEmpty ? (
+        <div className="text-center pop-in flex-1 flex flex-col items-center justify-center">
+          <Spline3D scene={SCENES.cube} className="w-full max-w-md h-64 mb-2" />
           <h2 className="text-5xl font-bold tracking-tighter mb-3 text-white/90">Nothing yet.</h2>
           <p className="text-white/40 mb-8 max-w-sm mx-auto">
             Count down to something, or watch a goal fill up.
@@ -110,6 +148,7 @@ export default function App() {
             <EventCard
               key={event.id}
               event={event}
+              onOpen={tabs.openTab}
               onEdit={(e) => setModal({ type: 'event', initial: e })}
               onDelete={(id) => dispatch({ type: 'DELETE_EVENT', id })}
             />
@@ -118,6 +157,7 @@ export default function App() {
             <GoalCard
               key={goal.id}
               goal={goal}
+              onOpen={tabs.openTab}
               onEdit={(g) => setModal({ type: 'goal', initial: g })}
               onDelete={(id) => dispatch({ type: 'DELETE_GOAL', id })}
             />
@@ -132,7 +172,7 @@ export default function App() {
         <GoalForm initial={modal.initial} onSave={saveGoal} onClose={() => setModal(null)} />
       )}
 
-      <footer className="mt-16 flex items-center justify-between mono text-[9px] text-white/25">
+      <footer className="relative z-10 mt-16 flex items-center justify-between mono text-[9px] text-white/25">
         <span>
           {state.events.length} events · {state.goals.length} goals · data local
         </span>

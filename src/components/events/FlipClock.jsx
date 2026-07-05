@@ -14,10 +14,11 @@ function FlipTile({ value, label, size = 'md' }) {
   }, [value, shown])
 
   const flipping = value !== shown
-  const dims =
-    size === 'lg'
-      ? { tile: 'w-20 h-24 text-5xl', label: 'text-[10px]' }
-      : { tile: 'w-14 h-16 text-3xl', label: 'text-[9px]' }
+  const dims = {
+    md: { tile: 'w-14 h-16 text-3xl', label: 'text-[9px]' },
+    lg: { tile: 'w-20 h-24 text-5xl', label: 'text-[10px]' },
+    xl: { tile: 'w-28 h-36 text-7xl sm:w-36 sm:h-44 sm:text-8xl', label: 'text-xs' },
+  }[size]
 
   return (
     <div className="flex flex-col items-center gap-1.5">
@@ -46,7 +47,7 @@ function FlipTile({ value, label, size = 'md' }) {
 
 export function FlipClock({ units, size = 'md' }) {
   return (
-    <div className="flex gap-2 justify-center">
+    <div className={`flex justify-center ${size === 'xl' ? 'gap-4' : 'gap-2'}`}>
       {units.map((u) => (
         <FlipTile key={u.label} value={String(u.value).padStart(2, '0')} label={u.label} size={size} />
       ))}

@@ -1,4 +1,5 @@
-const KEY = 'tracko:v1'
+export const STORAGE_KEY = 'tracko:v1'
+const KEY = STORAGE_KEY
 
 export const emptyState = { version: 1, events: [], goals: [] }
 

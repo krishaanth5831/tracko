@@ -135,3 +135,11 @@ body {
 .pop-in {
   animation: pop-in 0.25s ease-out;
 }
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
