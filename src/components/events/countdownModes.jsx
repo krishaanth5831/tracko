@@ -1,10 +1,13 @@
 import { getDiff, getCalendarParts } from '../../lib/countdown.js'
+import { FlipClock } from './FlipClock.jsx'
 
-function Unit({ value, label }) {
+function Stat({ value, label }) {
   return (
-    <div className="flex flex-col items-center min-w-14">
-      <span className="text-3xl font-bold tabular-nums">{String(value).padStart(2, '0')}</span>
-      <span className="text-xs uppercase tracking-wider text-white/50">{label}</span>
+    <div className="flex flex-col items-center min-w-16">
+      <span className="text-4xl font-bold tabular-nums tracking-tight">
+        {String(value).padStart(2, '0')}
+      </span>
+      <span className="mono text-[9px] text-white/35 mt-1">{label}</span>
     </div>
   )
 }
@@ -13,8 +16,8 @@ export function DaysOnly({ date, now }) {
   const d = getDiff(date, now)
   return (
     <div className="flex flex-col items-center">
-      <span className="text-6xl font-extrabold tabular-nums">{d.totalDays}</span>
-      <span className="text-sm text-white/60">
+      <span className="text-7xl font-bold tabular-nums tracking-tighter">{d.totalDays}</span>
+      <span className="mono text-[10px] text-white/35 mt-2">
         {d.totalDays === 1 ? 'day' : 'days'} {d.past ? 'ago' : 'left'}
       </span>
     </div>
@@ -25,12 +28,12 @@ export function Detailed({ date, now }) {
   const p = getCalendarParts(date, now)
   return (
     <div className="flex flex-col items-center gap-1">
-      <div className="flex gap-3">
-        <Unit value={p.months} label="months" />
-        <Unit value={p.days} label="days" />
-        <Unit value={p.hours} label="hours" />
+      <div className="flex gap-4">
+        <Stat value={p.months} label="months" />
+        <Stat value={p.days} label="days" />
+        <Stat value={p.hours} label="hours" />
       </div>
-      {p.past && <span className="text-sm text-white/60">ago</span>}
+      {p.past && <span className="mono text-[10px] text-white/35">ago</span>}
     </div>
   )
 }
@@ -39,17 +42,16 @@ export function LiveTimer({ date, now }) {
   const d = getDiff(date, now)
   const totalHours = d.days * 24 + d.hours
   return (
-    <div className="flex flex-col items-center gap-1">
-      <div className="flex items-baseline gap-1 text-4xl font-bold tabular-nums">
-        <span>{String(totalHours).padStart(2, '0')}</span>
-        <span className="text-white/40">:</span>
-        <span>{String(d.minutes).padStart(2, '0')}</span>
-        <span className="text-white/40">:</span>
-        <span>{String(d.seconds).padStart(2, '0')}</span>
-      </div>
-      <span className="text-xs uppercase tracking-wider text-white/50">
-        hrs : min : sec {d.past ? 'ago' : ''}
-      </span>
+    <div className="flex flex-col items-center gap-2">
+      <FlipClock
+        size="lg"
+        units={[
+          { value: totalHours, label: 'hrs' },
+          { value: d.minutes, label: 'min' },
+          { value: d.seconds, label: 'sec' },
+        ]}
+      />
+      {d.past && <span className="mono text-[10px] text-white/35">ago</span>}
     </div>
   )
 }
@@ -57,14 +59,16 @@ export function LiveTimer({ date, now }) {
 export function FullTimer({ date, now }) {
   const d = getDiff(date, now)
   return (
-    <div className="flex flex-col items-center gap-1">
-      <div className="flex gap-2">
-        <Unit value={d.days} label="days" />
-        <Unit value={d.hours} label="hrs" />
-        <Unit value={d.minutes} label="min" />
-        <Unit value={d.seconds} label="sec" />
-      </div>
-      {d.past && <span className="text-sm text-white/60">ago</span>}
+    <div className="flex flex-col items-center gap-2">
+      <FlipClock
+        units={[
+          { value: d.days, label: 'days' },
+          { value: d.hours, label: 'hrs' },
+          { value: d.minutes, label: 'min' },
+          { value: d.seconds, label: 'sec' },
+        ]}
+      />
+      {d.past && <span className="mono text-[10px] text-white/35">ago</span>}
     </div>
   )
 }

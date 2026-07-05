@@ -1,28 +1,134 @@
 @import "tailwindcss";
+@import "@fontsource-variable/inter";
 
 :root {
   color-scheme: dark;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Mono", Menlo, monospace;
 }
 
 body {
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  background: radial-gradient(ellipse at top, #1e1b3a 0%, #0f0d1f 55%, #0a0817 100%);
+  font-family: "Inter Variable", system-ui, -apple-system, sans-serif;
+  background-color: #050505;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 28px 28px;
   min-height: 100vh;
-  color: #e8e6f0;
+  color: #ededed;
+  font-feature-settings: "tnum";
 }
 
-.card-glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+.mono {
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
 }
+
+.card {
+  background: #0b0b0b;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: border-color 0.2s ease;
+}
+
+.card:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+/* ——— Fliqlo flip clock ——— */
+
+.flip-tile {
+  position: relative;
+  background: #141414;
+  border-radius: 10px;
+  overflow: hidden;
+  font-weight: 700;
+  color: #e6e6e6;
+  font-feature-settings: "tnum";
+}
+
+.flip-half {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  overflow: hidden;
+}
+
+.flip-half.top {
+  top: 0;
+  background: #161616;
+}
+
+.flip-half.bottom {
+  bottom: 0;
+  background: #101010;
+}
+
+.flip-half > span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 200%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flip-half.top > span {
+  top: 0;
+}
+
+.flip-half.bottom > span {
+  top: -100%;
+}
+
+.flip-tile::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 4;
+}
+
+.flip-flap {
+  z-index: 3;
+  backface-visibility: hidden;
+}
+
+.flip-flap.front {
+  transform-origin: bottom;
+  animation: flap-down-out 0.28s ease-in forwards;
+}
+
+.flip-flap.back {
+  transform-origin: top;
+  transform: rotateX(90deg);
+  animation: flap-down-in 0.28s ease-out 0.28s forwards;
+}
+
+@keyframes flap-down-out {
+  from { transform: rotateX(0deg); }
+  to { transform: rotateX(-90deg); }
+}
+
+@keyframes flap-down-in {
+  from { transform: rotateX(90deg); }
+  to { transform: rotateX(0deg); }
+}
+
+/* ——— goal fill ——— */
 
 .sack-fill {
   transition: height 1s cubic-bezier(0.22, 1, 0.36, 1), y 1s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.dot-cell {
+  transition: background-color 0.4s ease;
+}
+
 @keyframes pop-in {
-  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  from { opacity: 0; transform: scale(0.98) translateY(6px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 

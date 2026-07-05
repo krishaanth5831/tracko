@@ -3,6 +3,24 @@ import confetti from 'canvas-confetti'
 import { MoneySack } from './MoneySack.jsx'
 import { uid, useStore } from '../../state/store.jsx'
 import { inputCls } from '../ui.jsx'
+import { Logo } from '../LogoPicker.jsx'
+
+// Caveman-style dot matrix: 40 dots, filled portion green
+function DotMatrix({ progress }) {
+  const total = 40
+  const filled = Math.round(Math.min(progress, 1) * total)
+  return (
+    <div className="grid grid-cols-20 gap-1">
+      {Array.from({ length: total }, (_, i) => (
+        <div
+          key={i}
+          className="dot-cell aspect-square rounded-full"
+          style={{ backgroundColor: i < filled ? '#4ade80' : 'rgba(255,255,255,0.08)' }}
+        />
+      ))}
+    </div>
+  )
+}
 
 export function GoalCard({ goal, onEdit, onDelete }) {
   const { dispatch } = useStore()
@@ -46,25 +64,25 @@ export function GoalCard({ goal, onEdit, onDelete }) {
     `${goal.currency}${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
 
   return (
-    <div
-      ref={cardRef}
-      className="card-glass rounded-2xl p-5 flex flex-col gap-3 pop-in relative group"
-      style={{ boxShadow: '0 0 40px -12px #f59e0b55' }}
-    >
+    <div ref={cardRef} className="card rounded-2xl p-5 flex flex-col gap-4 pop-in relative group">
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 bg-amber-500/15 border border-amber-500/30">
-          {goal.emoji}
-        </div>
+        <Logo image={goal.image} emoji={goal.emoji} />
         <div className="min-w-0">
           <h3 className="font-semibold truncate">{goal.name}</h3>
-          <p className="text-xs text-white/50">
-            {fmt(total)} of {fmt(goal.target)}
-            {progress >= 1 && ' · 🎉 goal reached!'}
+          <p className="mono text-[10px] text-white/35 mt-0.5">
+            {fmt(total)} / {fmt(goal.target)}
+            {progress >= 1 && ' · reached'}
           </p>
         </div>
+        <span className="ml-auto text-3xl font-bold tabular-nums tracking-tight shrink-0">
+          {Math.round(Math.min(progress, 1) * 100)}
+          <span className="text-white/30 text-lg">%</span>
+        </span>
       </div>
 
       <MoneySack progress={progress} />
+
+      <DotMatrix progress={progress} />
 
       <form onSubmit={addMoney} className="flex gap-2">
         <input
@@ -72,19 +90,19 @@ export function GoalCard({ goal, onEdit, onDelete }) {
           step="any"
           min="0"
           className={inputCls + ' flex-1'}
-          placeholder={`Add ${goal.currency}…`}
+          placeholder={`Add ${goal.currency}`}
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
         />
         <input
           className={inputCls + ' flex-1'}
-          placeholder="note (optional)"
+          placeholder="note"
           value={note}
           onChange={(e) => setNote(e.target.value)}
         />
         <button
           type="submit"
-          className="rounded-lg bg-amber-500 hover:bg-amber-400 px-3 font-bold text-black transition-colors"
+          className="rounded-lg bg-white text-black hover:bg-white/85 px-3.5 font-bold transition-colors"
         >
           +
         </button>
@@ -93,23 +111,23 @@ export function GoalCard({ goal, onEdit, onDelete }) {
       {goal.contributions.length > 0 && (
         <button
           onClick={() => setShowHistory((s) => !s)}
-          className="text-xs text-white/50 hover:text-white/80 text-left"
+          className="mono text-[10px] text-white/35 hover:text-white/70 text-left transition-colors"
         >
-          {showHistory ? '▾ hide' : '▸ show'} history ({goal.contributions.length})
+          {showHistory ? '− hide' : '+ show'} history ({goal.contributions.length})
         </button>
       )}
       {showHistory && (
         <ul className="flex flex-col gap-1 max-h-36 overflow-y-auto text-sm">
           {[...goal.contributions].reverse().map((c) => (
-            <li key={c.id} className="flex items-center gap-2 bg-white/5 rounded-lg px-2 py-1">
-              <span className="font-semibold text-amber-300">{fmt(c.amount)}</span>
-              <span className="text-white/50 truncate flex-1">{c.note}</span>
-              <span className="text-white/30 text-xs">
+            <li key={c.id} className="flex items-center gap-2 bg-white/5 rounded-lg px-2.5 py-1.5">
+              <span className="font-semibold tabular-nums">{fmt(c.amount)}</span>
+              <span className="text-white/40 truncate flex-1">{c.note}</span>
+              <span className="mono text-[9px] text-white/25">
                 {new Date(c.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
               </span>
               <button
                 onClick={() => dispatch({ type: 'DELETE_CONTRIBUTION', goalId: goal.id, id: c.id })}
-                className="text-white/30 hover:text-red-400"
+                className="text-white/25 hover:text-white/70"
                 title="Remove"
               >
                 ✕
@@ -120,11 +138,11 @@ export function GoalCard({ goal, onEdit, onDelete }) {
       )}
 
       <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button onClick={() => onEdit(goal)} className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-xs" title="Edit">
-          ✏️
+        <button onClick={() => onEdit(goal)} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/15 text-xs text-white/60" title="Edit">
+          ✎
         </button>
-        <button onClick={() => onDelete(goal.id)} className="w-7 h-7 rounded-lg bg-white/10 hover:bg-red-500/40 text-xs" title="Delete">
-          🗑️
+        <button onClick={() => onDelete(goal.id)} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/15 text-xs text-white/60" title="Delete">
+          ✕
         </button>
       </div>
     </div>

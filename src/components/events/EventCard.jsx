@@ -1,5 +1,6 @@
 import { useNow } from '../../hooks/useNow.js'
 import { MODE_COMPONENTS } from './countdownModes.jsx'
+import { Logo } from '../LogoPicker.jsx'
 
 export function EventCard({ event, onEdit, onDelete }) {
   const needsSeconds = event.mode === 'live' || event.mode === 'full'
@@ -8,20 +9,12 @@ export function EventCard({ event, onEdit, onDelete }) {
   const isPast = new Date(event.date) < now
 
   return (
-    <div
-      className="card-glass rounded-2xl p-5 flex flex-col gap-4 pop-in relative group"
-      style={{ boxShadow: `0 0 40px -12px ${event.color}55` }}
-    >
+    <div className="card rounded-2xl p-5 flex flex-col gap-5 pop-in relative group">
       <div className="flex items-center gap-3">
-        <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0"
-          style={{ background: `${event.color}22`, border: `1px solid ${event.color}44` }}
-        >
-          {event.emoji}
-        </div>
+        <Logo image={event.image} emoji={event.emoji} />
         <div className="min-w-0">
           <h3 className="font-semibold truncate">{event.name}</h3>
-          <p className="text-xs text-white/50">
+          <p className="mono text-[10px] text-white/35 mt-0.5">
             {new Date(event.date).toLocaleString(undefined, {
               dateStyle: 'medium',
               timeStyle: event.date.includes('T') ? 'short' : undefined,
@@ -31,24 +24,24 @@ export function EventCard({ event, onEdit, onDelete }) {
         </div>
       </div>
 
-      <div className="py-2" style={{ color: event.color }}>
+      <div className="py-1">
         <Mode date={event.date} now={now} />
       </div>
 
       <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={() => onEdit(event)}
-          className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-xs"
+          className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/15 text-xs text-white/60"
           title="Edit"
         >
-          ✏️
+          ✎
         </button>
         <button
           onClick={() => onDelete(event.id)}
-          className="w-7 h-7 rounded-lg bg-white/10 hover:bg-red-500/40 text-xs"
+          className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/15 text-xs text-white/60"
           title="Delete"
         >
-          🗑️
+          ✕
         </button>
       </div>
     </div>

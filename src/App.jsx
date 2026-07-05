@@ -37,25 +37,20 @@ export default function App() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <header className="flex items-center justify-between mb-8 flex-wrap gap-3">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">
-            ⏳ Tracko
-          </h1>
-          <p className="text-sm text-white/50">countdowns & goals, at a glance</p>
-        </div>
-        <div className="flex gap-2 items-center">
+    <div className="max-w-6xl mx-auto px-5 py-10 min-h-screen flex flex-col">
+      <header className="flex items-center justify-between mb-12 flex-wrap gap-4">
+        <h1 className="mono text-sm font-bold">⏳ TRACKO</h1>
+        <div className="flex gap-4 items-center">
           <button
             onClick={() => exportState(state)}
-            className="rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-2 text-sm"
+            className="mono text-[10px] text-white/40 hover:text-white transition-colors"
             title="Download a JSON backup"
           >
             Export
           </button>
           <button
             onClick={() => fileRef.current?.click()}
-            className="rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-2 text-sm"
+            className="mono text-[10px] text-white/40 hover:text-white transition-colors"
             title="Restore from a JSON backup"
           >
             Import
@@ -64,23 +59,23 @@ export default function App() {
           <div className="relative">
             <button
               onClick={() => setPickerOpen((o) => !o)}
-              className="rounded-lg bg-violet-500 hover:bg-violet-400 px-4 py-2 font-semibold transition-colors"
+              className="rounded-full bg-white text-black hover:bg-white/85 px-4 py-1.5 text-sm font-semibold transition-colors"
             >
               + Add
             </button>
             {pickerOpen && (
-              <div className="absolute right-0 mt-2 card-glass rounded-xl p-1.5 flex flex-col w-44 z-40 pop-in bg-[#16132b]!">
+              <div className="absolute right-0 mt-2 card rounded-xl p-1.5 flex flex-col w-44 z-40 pop-in bg-[#0d0d0d]!">
                 <button
                   onClick={() => { setPickerOpen(false); setModal({ type: 'event' }) }}
                   className="text-left px-3 py-2 rounded-lg hover:bg-white/10 text-sm"
                 >
-                  📅 Event countdown
+                  Event countdown
                 </button>
                 <button
                   onClick={() => { setPickerOpen(false); setModal({ type: 'goal' }) }}
                   className="text-left px-3 py-2 rounded-lg hover:bg-white/10 text-sm"
                 >
-                  💰 Money goal
+                  Money goal
                 </button>
               </div>
             )}
@@ -89,29 +84,28 @@ export default function App() {
       </header>
 
       {isEmpty ? (
-        <div className="text-center py-24 pop-in">
-          <div className="text-6xl mb-4">🌱</div>
-          <h2 className="text-xl font-bold mb-2">Nothing tracked yet</h2>
-          <p className="text-white/50 mb-6 max-w-sm mx-auto">
-            Add an event to count down to, or set a money goal and watch the sack fill up.
+        <div className="text-center py-24 pop-in flex-1">
+          <h2 className="text-5xl font-bold tracking-tighter mb-3 text-white/90">Nothing yet.</h2>
+          <p className="text-white/40 mb-8 max-w-sm mx-auto">
+            Count down to something, or watch a goal fill up.
           </p>
           <div className="flex gap-3 justify-center">
             <button
               onClick={() => setModal({ type: 'event' })}
-              className="rounded-lg bg-violet-500 hover:bg-violet-400 px-4 py-2.5 font-semibold"
+              className="rounded-full bg-white text-black hover:bg-white/85 px-5 py-2.5 font-semibold transition-colors"
             >
-              📅 Add an event
+              Add an event
             </button>
             <button
               onClick={() => setModal({ type: 'goal' })}
-              className="rounded-lg bg-amber-500 hover:bg-amber-400 px-4 py-2.5 font-semibold text-black"
+              className="rounded-full border border-white/20 hover:border-white/50 px-5 py-2.5 font-semibold transition-colors"
             >
-              💰 Set a goal
+              Set a goal
             </button>
           </div>
         </div>
       ) : (
-        <main className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-start">
+        <main className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start flex-1">
           {state.events.map((event) => (
             <EventCard
               key={event.id}
@@ -138,17 +132,18 @@ export default function App() {
         <GoalForm initial={modal.initial} onSave={saveGoal} onClose={() => setModal(null)} />
       )}
 
-      <footer className="mt-12 text-center text-xs text-white/30">
-        open source ·{' '}
+      <footer className="mt-16 flex items-center justify-between mono text-[9px] text-white/25">
+        <span>
+          {state.events.length} events · {state.goals.length} goals · data local
+        </span>
         <a
           href="https://github.com/krishaanth5831/tracko"
           target="_blank"
           rel="noreferrer"
-          className="underline hover:text-white/60"
+          className="hover:text-white/60 transition-colors"
         >
-          github.com/krishaanth5831/tracko
-        </a>{' '}
-        · data stays in your browser
+          open source ↗
+        </a>
       </footer>
     </div>
   )
