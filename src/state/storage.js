@@ -16,7 +16,14 @@ export function loadState() {
 }
 
 export function saveState(state) {
-  localStorage.setItem(KEY, JSON.stringify(state))
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state))
+  } catch {
+    // QuotaExceededError — usually too many uploaded logos. Warn instead of losing data silently.
+    alert(
+      'Tracko could not save: browser storage is full. Export a backup, then remove an uploaded logo or an old tracker.'
+    )
+  }
 }
 
 export function exportState(state) {

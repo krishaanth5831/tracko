@@ -32,7 +32,12 @@ First match wins, so put specific keywords above generic ones.
 
 ### Add a goal visualization
 
-The money sack lives in `src/components/goals/MoneySack.jsx` — it's an SVG whose fill is a rect clipped to the sack shape, driven by a `progress` prop (0–1). New visualizations (thermometer, jar, ring) can follow the same pattern.
+Goal visualizations (money sack, thermometer, jar, ring) are swappable — the user picks one per goal in the goal form. Adding a new one is one component plus one registry row, both in `src/components/goals/vizzes.jsx`:
+
+1. Write a component that takes `{ progress, size }` (`progress` is 0–1, `size` is Tailwind size classes). The existing ones are SVGs whose fill is a rect clipped to the shape's outline — see `MoneySack.jsx` for the technique. Keep the outline monochrome; one accent color for the fill is fine.
+2. Register it in `VIZ_COMPONENTS` and add a `{ id, label }` row to `GOAL_VIZZES`.
+
+Cards, the fullscreen focus view, and the form's picker (which renders a live mini preview at 65%) all pick it up automatically.
 
 ## Guidelines
 

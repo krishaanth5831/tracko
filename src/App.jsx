@@ -9,6 +9,7 @@ import { EventForm } from './components/events/EventForm.jsx'
 import { GoalCard } from './components/goals/GoalCard.jsx'
 import { GoalForm } from './components/goals/GoalForm.jsx'
 import { Spline3D, SCENES } from './components/Spline3D.jsx'
+import { PixelLogo } from './components/PixelLogo.jsx'
 
 export default function App() {
   const { state, dispatch } = useStore()
@@ -64,9 +65,13 @@ export default function App() {
 
   return (
     <div className="max-w-6xl mx-auto px-5 py-8 min-h-screen flex flex-col">
-      <header className="relative z-10 flex items-center justify-between mb-6 flex-wrap gap-4">
-        <button onClick={() => tabs.goTo('home')} className="mono text-sm font-bold hover:text-white/70 transition-colors">
-          ⏳ TRACKO
+      <header className="ui-chrome relative z-10 flex items-center justify-between mb-6 flex-wrap gap-4">
+        <button
+          onClick={() => tabs.goTo('home')}
+          className="flex items-center gap-3 mono text-sm font-bold hover:text-white/70 transition-colors"
+        >
+          <PixelLogo px={3} gap={1} />
+          TRACKO
         </button>
         <div className="flex gap-4 items-center">
           <button
@@ -172,7 +177,7 @@ export default function App() {
         <GoalForm initial={modal.initial} onSave={saveGoal} onClose={() => setModal(null)} />
       )}
 
-      <footer className="relative z-10 mt-16 flex items-center justify-between mono text-[9px] text-white/25">
+      <footer className="ui-chrome relative z-10 mt-16 flex items-center justify-between mono text-[9px] text-white/25">
         <span>
           {state.events.length} events · {state.goals.length} goals · data local
         </span>

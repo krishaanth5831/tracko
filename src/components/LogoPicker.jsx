@@ -1,12 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { searchImages, attribution } from '../lib/imageSearch.js'
+import { fileToLogo } from '../lib/imageUpload.js'
 
-// Searches Openverse for real photos matching `query` and lets the user pick
-// one as the tracker logo. `value` is the selected image (or null for emoji).
+const isUpload = (image) => image?.type === 'upload' // missing type = openverse (back-compat)
+
+// Lets the user pick a tracker logo: the auto emoji, an uploaded picture, or
+// a real photo from Openverse matching `query`. `value` is the selected image
+// (null for emoji).
 export function LogoPicker({ query, value, onChange, fallbackEmoji }) {
   const [results, setResults] = useState([])
   const [status, setStatus] = useState('idle') // idle | loading | done | error
   const lastQuery = useRef('')
+  const fileRef = useRef(null)
 
   useEffect(() => {
     const q = query.trim()
@@ -24,7 +29,14 @@ export function LogoPicker({ query, value, onChange, fallbackEmoji }) {
     return () => clearTimeout(t)
   }, [query])
 
-  if (query.trim().length < 3) return null
+  function onFile(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    fileToLogo(file)
+      .then(onChange)
+      .catch(() => alert('Could not read that image file.'))
+    e.target.value = ''
+  }
 
   return (
     <div>
@@ -43,21 +55,37 @@ export function LogoPicker({ query, value, onChange, fallbackEmoji }) {
         >
           {fallbackEmoji}
         </button>
-        {results.map((img) => (
-          <button
-            type="button"
-            key={img.id}
-            onClick={() => onChange(value?.id === img.id ? null : img)}
-            title={attribution(img)}
-            className={`aspect-square rounded-lg overflow-hidden border transition-colors ${
-              value?.id === img.id ? 'border-white' : 'border-white/10 hover:border-white/30'
-            }`}
-          >
-            <img src={img.thumb} alt={img.title} loading="lazy" className="w-full h-full object-cover" />
-          </button>
-        ))}
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          title="Upload your own picture"
+          className={`aspect-square rounded-lg overflow-hidden flex items-center justify-center border transition-colors ${
+            isUpload(value) ? 'border-white' : 'border-white/10 bg-white/5 hover:border-white/30'
+          }`}
+        >
+          {isUpload(value) ? (
+            <img src={value.dataUrl} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-xl text-white/50">⤒</span>
+          )}
+        </button>
+        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onFile} />
+        {query.trim().length >= 3 &&
+          results.map((img) => (
+            <button
+              type="button"
+              key={img.id}
+              onClick={() => onChange(value?.id === img.id ? null : img)}
+              title={attribution(img)}
+              className={`aspect-square rounded-lg overflow-hidden border transition-colors ${
+                value?.id === img.id ? 'border-white' : 'border-white/10 hover:border-white/30'
+              }`}
+            >
+              <img src={img.thumb} alt={img.title} loading="lazy" className="w-full h-full object-cover" />
+            </button>
+          ))}
       </div>
-      {value && (
+      {value && !isUpload(value) && (
         <p className="text-[10px] text-white/30 mt-1.5 truncate">
           <a href={value.link} target="_blank" rel="noreferrer" className="hover:text-white/60">
             {attribution(value)}
@@ -73,9 +101,9 @@ export function Logo({ image, emoji, size = 'w-12 h-12' }) {
   if (image) {
     return (
       <img
-        src={image.thumb}
+        src={image.dataUrl ?? image.thumb}
         alt=""
-        title={attribution(image)}
+        title={isUpload(image) ? undefined : attribution(image)}
         className={`${size} rounded-lg object-cover shrink-0 border border-white/10`}
       />
     )

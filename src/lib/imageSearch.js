@@ -13,6 +13,7 @@ export async function searchImages(query, count = 6) {
   if (!res.ok) throw new Error(`Image search failed (${res.status})`)
   const data = await res.json()
   return (data.results ?? []).map((r) => ({
+    type: 'openverse',
     id: r.id,
     thumb: r.thumbnail,
     url: r.url,

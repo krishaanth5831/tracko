@@ -1,6 +1,6 @@
 export function TabBar({ tabs, active, onSelect, onClose }) {
   return (
-    <nav className="relative z-10 flex items-end gap-1 border-b border-white/10 mb-8 overflow-x-auto no-scrollbar">
+    <nav className="ui-chrome relative z-10 flex items-end gap-1 border-b border-white/10 mb-8 overflow-x-auto no-scrollbar">
       <Tab label="Home" active={active === 'home'} onSelect={() => onSelect('home')} />
       {tabs.map((t) => (
         <Tab

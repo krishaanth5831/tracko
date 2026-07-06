@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import confetti from 'canvas-confetti'
-import { MoneySack } from './MoneySack.jsx'
+import { VIZ_COMPONENTS } from './vizzes.jsx'
 import { uid, useStore } from '../../state/store.jsx'
 import { inputCls } from '../ui.jsx'
 import { Logo } from '../LogoPicker.jsx'
@@ -16,6 +16,7 @@ export function GoalCard({ goal, onEdit, onDelete, onOpen }) {
   const total = goal.contributions.reduce((s, c) => s + c.amount, 0)
   const progress = goal.target > 0 ? total / goal.target : 0
   const prevProgress = useRef(progress)
+  const Viz = VIZ_COMPONENTS[goal.viz] ?? VIZ_COMPONENTS.sack
 
   useEffect(() => {
     if (prevProgress.current < 1 && progress >= 1) {
@@ -68,7 +69,7 @@ export function GoalCard({ goal, onEdit, onDelete, onOpen }) {
         </span>
       </div>
 
-      <MoneySack progress={progress} />
+      <Viz progress={progress} />
 
       <DotMatrix progress={progress} />
 

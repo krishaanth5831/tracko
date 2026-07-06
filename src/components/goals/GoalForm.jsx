@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { uid } from '../../state/store.jsx'
 import { Modal, inputCls, btnPrimary } from '../ui.jsx'
 import { LogoPicker } from '../LogoPicker.jsx'
+import { GOAL_VIZZES, VIZ_COMPONENTS } from './vizzes.jsx'
 
 export function GoalForm({ initial, onSave, onClose }) {
   const [name, setName] = useState(initial?.name ?? '')
   const [target, setTarget] = useState(initial?.target ?? '')
   const [currency, setCurrency] = useState(initial?.currency ?? '$')
+  const [viz, setViz] = useState(initial?.viz ?? 'sack')
   const [image, setImage] = useState(initial?.image ?? null)
 
   function submit(e) {
@@ -19,6 +21,7 @@ export function GoalForm({ initial, onSave, onClose }) {
       target: t,
       currency,
       emoji: initial?.emoji ?? '💰',
+      viz,
       image,
       contributions: initial?.contributions ?? [],
       createdAt: initial?.createdAt ?? new Date().toISOString(),
@@ -52,6 +55,30 @@ export function GoalForm({ initial, onSave, onClose }) {
               onChange={(e) => setTarget(e.target.value)}
             />
           </label>
+        </div>
+
+        <div>
+          <p className="mono text-[10px] text-white/40 mb-2">Visualization</p>
+          <div className="grid grid-cols-2 gap-2">
+            {GOAL_VIZZES.map((v) => {
+              const Viz = VIZ_COMPONENTS[v.id]
+              return (
+                <button
+                  type="button"
+                  key={v.id}
+                  onClick={() => setViz(v.id)}
+                  className={`rounded-lg px-3 py-2 text-sm border transition-colors flex items-center gap-3 ${
+                    viz === v.id
+                      ? 'border-white bg-white/10 text-white'
+                      : 'border-white/10 bg-white/5 text-white/50 hover:border-white/30'
+                  }`}
+                >
+                  <Viz progress={0.65} size="w-9 h-9" />
+                  {v.label}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         <LogoPicker query={name} value={image} onChange={setImage} fallbackEmoji="💰" />

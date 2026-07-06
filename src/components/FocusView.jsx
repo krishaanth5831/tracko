@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import confetti from 'canvas-confetti'
 import { useNow } from '../hooks/useNow.js'
+import { useIdle } from '../hooks/useIdle.js'
 import { uid, useStore } from '../state/store.jsx'
 import { MODE_COMPONENTS } from './events/countdownModes.jsx'
-import { MoneySack } from './goals/MoneySack.jsx'
+import { VIZ_COMPONENTS } from './goals/vizzes.jsx'
 import { DotMatrix } from './goals/DotMatrix.jsx'
 import { Logo } from './LogoPicker.jsx'
 import { Spline3D, SCENES } from './Spline3D.jsx'
@@ -14,18 +15,35 @@ import { inputCls } from './ui.jsx'
 export function FocusView({ item, kind, onHome }) {
   const [bgLogo, setBgLogo] = useState(false)
 
+  // Ambient screensaver: after ~5s of no input the chrome fades away and the
+  // tracker becomes a pure clock, Fliqlo-style. ?zen starts idle immediately.
+  const zen = useMemo(() => new URLSearchParams(window.location.search).has('zen'), [])
+  const [idle, wokeAt] = useIdle(5000, zen)
+  const [hintDone, setHintDone] = useState(false)
+
+  useEffect(() => {
+    document.body.classList.toggle('zen-idle', idle)
+    return () => document.body.classList.remove('zen-idle')
+  }, [idle])
+
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onHome()
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onHome])
 
+  function onBackdropClick() {
+    // the click that wakes the screensaver should only wake, not toggle the bg
+    if (Date.now() - wokeAt.current < 400) return
+    setBgLogo((b) => !b)
+  }
+
   return (
     <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh]">
       {/* full-viewport click layer: anywhere except the content toggles the bg */}
       <div
         className="fixed inset-0 cursor-pointer"
-        onClick={() => setBgLogo((b) => !b)}
+        onClick={onBackdropClick}
         title={bgLogo ? 'Click to bring the logo back up' : 'Click to use the logo as background'}
       />
 
@@ -37,7 +55,11 @@ export function FocusView({ item, kind, onHome }) {
       >
         {item.image ? (
           <>
-            <img src={item.image.url ?? item.image.thumb} alt="" className="w-full h-full object-cover" />
+            <img
+              src={item.image.dataUrl ?? item.image.url ?? item.image.thumb}
+              alt=""
+              className={`w-full h-full object-cover ${idle && bgLogo ? 'kenburns' : ''}`}
+            />
             <div className="absolute inset-0 bg-black/60" />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/80" />
           </>
@@ -51,7 +73,28 @@ export function FocusView({ item, kind, onHome }) {
         )}
       </div>
 
-      <div className="relative flex flex-col items-center gap-6" onClick={(e) => e.stopPropagation()}>
+      {/* slight dim while the screensaver is on */}
+      <div
+        className={`fixed inset-0 z-20 bg-black pointer-events-none transition-opacity duration-700 ${
+          idle ? 'opacity-30' : 'opacity-0'
+        }`}
+      />
+
+      {idle && !hintDone && (
+        <p
+          className="zen-hint fixed bottom-10 left-1/2 -translate-x-1/2 mono text-[10px] text-white/50 pointer-events-none"
+          onAnimationEnd={() => setHintDone(true)}
+        >
+          Move to wake
+        </p>
+      )}
+
+      <div
+        className={`relative flex flex-col items-center gap-6 transition-transform duration-700 ${
+          idle ? 'scale-[1.08]' : 'scale-100'
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div
           className={`transition-all duration-500 flex flex-col items-center gap-6 ${
             bgLogo ? 'opacity-0 max-h-0 overflow-hidden' : 'opacity-100 max-h-40'
@@ -97,6 +140,7 @@ function GoalFocus({ goal }) {
   const total = goal.contributions.reduce((s, c) => s + c.amount, 0)
   const progress = goal.target > 0 ? total / goal.target : 0
   const prevProgress = useRef(progress)
+  const Viz = VIZ_COMPONENTS[goal.viz] ?? VIZ_COMPONENTS.sack
 
   useEffect(() => {
     if (prevProgress.current < 1 && progress >= 1) {
@@ -133,7 +177,7 @@ function GoalFocus({ goal }) {
         </p>
       </div>
 
-      <MoneySack progress={progress} size="w-52 h-52" />
+      <Viz progress={progress} size="w-52 h-52" />
       <DotMatrix progress={progress} total={80} cols={40} />
 
       <form onSubmit={addMoney} className="flex gap-2 w-full">

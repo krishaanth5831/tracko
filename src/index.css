@@ -127,6 +127,20 @@ body {
   transition: background-color 0.4s ease;
 }
 
+.ring-progress {
+  transition: stroke-dashoffset 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.jar-lid {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.jar-lid.popped {
+  transform: translate(7px, -9px) rotate(12deg);
+}
+
 @keyframes pop-in {
   from { opacity: 0; transform: scale(0.98) translateY(6px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
@@ -134,6 +148,73 @@ body {
 
 .pop-in {
   animation: pop-in 0.25s ease-out;
+}
+
+/* ——— ambient screensaver (zen) ——— */
+
+/* chrome fades out slowly when idle, snaps back fast on wake */
+.ui-chrome {
+  transition: opacity 0.25s ease;
+}
+
+body.zen-idle .ui-chrome {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.7s ease;
+}
+
+.kenburns {
+  animation: kenburns 60s ease-in-out infinite alternate;
+}
+
+@keyframes kenburns {
+  from { transform: scale(1) translate(0, 0); }
+  to { transform: scale(1.12) translate(-1.5%, 1.5%); }
+}
+
+.zen-hint {
+  animation: zen-hint 4s ease forwards;
+}
+
+@keyframes zen-hint {
+  0% { opacity: 0; }
+  15% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kenburns {
+    animation: none;
+  }
+}
+
+/* ——— pixel logo ——— */
+
+.plogo {
+  position: relative;
+  display: inline-block;
+  flex: none;
+}
+
+.plogo-px {
+  position: absolute;
+  background: #fff;
+  will-change: transform, opacity;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
+  animation: plogo-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@keyframes plogo-in {
+  from { opacity: 0; transform: scale(0) rotate(90deg); }
+  to { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plogo-px {
+    animation: none;
+    transition: none;
+  }
 }
 
 .no-scrollbar {
