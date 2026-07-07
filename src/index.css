@@ -42,6 +42,17 @@ body {
   font-weight: 700;
   color: #e6e6e6;
   font-feature-settings: "tnum";
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+/* specular sheen — gives the tiles their 3D-slab read */
+.flip-tile::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 25%, rgba(255, 255, 255, 0.06) 42%, transparent 58%);
 }
 
 .flip-half {
@@ -141,6 +152,68 @@ body {
   transform: translate(7px, -9px) rotate(12deg);
 }
 
+/* T-0: the countdown hit zero — invert-flash a few times */
+.t0-flash {
+  animation: t0-flash 1.8s ease;
+}
+
+@keyframes t0-flash {
+  0%, 20%, 40%, 60% { filter: invert(0); }
+  10%, 30%, 50% { filter: invert(1); }
+  100% { filter: invert(0); }
+}
+
+/* hover parallax on cards */
+.tilt-card {
+  transform-style: preserve-3d;
+  transition: transform 0.15s ease-out;
+  will-change: transform;
+}
+
+.tilt-card .tilt-deep {
+  transform: translateZ(16px);
+}
+
+/* liquid wobble when a contribution lands */
+.viz-ripple {
+  animation: viz-ripple 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: center bottom;
+}
+
+@keyframes viz-ripple {
+  0% { transform: scale(1, 1); }
+  30% { transform: scale(1.04, 0.95); }
+  60% { transform: scale(0.98, 1.03); }
+  100% { transform: scale(1, 1); }
+}
+
+.bat-pulse {
+  animation: bat-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes bat-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.px-cell {
+  transition: fill 0.4s ease;
+}
+
+.orbit-rotor {
+  transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.vault-door {
+  transform-box: fill-box;
+  transform-origin: left center;
+  transition: transform 0.9s cubic-bezier(0.34, 1.3, 0.64, 1) 0.4s;
+}
+
+.vault-door.open {
+  transform: rotate(-78deg);
+}
+
 @keyframes pop-in {
   from { opacity: 0; transform: scale(0.98) translateY(6px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
@@ -215,6 +288,77 @@ body.zen-idle .ui-chrome {
     animation: none;
     transition: none;
   }
+}
+
+/* ——— pixel dissolve between tabs ——— */
+
+.pxd-cell {
+  background: #000;
+  opacity: 0;
+  animation: pxd 0.45s ease both;
+}
+
+@keyframes pxd {
+  0% { opacity: 0; }
+  40% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ——— 3D pixel logo (empty-state hero) ——— */
+
+.p3d-wrap {
+  perspective: 900px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.p3d-tilt {
+  transform: rotateX(18deg);
+  transform-style: preserve-3d;
+}
+
+.p3d-rotor {
+  position: relative;
+  transform-style: preserve-3d;
+  animation: p3d-spin 26s linear infinite;
+}
+
+@keyframes p3d-spin {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(360deg); }
+}
+
+.p3d-cube {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.p3d-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .p3d-rotor {
+    animation: none;
+  }
+}
+
+/* ——— toast ——— */
+
+.toast-in {
+  animation: toast-in 0.25s ease-out;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .no-scrollbar {

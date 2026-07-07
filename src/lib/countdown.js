@@ -38,6 +38,31 @@ export function getCalendarParts(targetISO, now) {
   }
 }
 
+export const REPEAT_OPTIONS = [
+  { id: 'none', label: 'One-time' },
+  { id: 'weekly', label: 'Weekly' },
+  { id: 'monthly', label: 'Monthly' },
+  { id: 'yearly', label: 'Yearly' },
+]
+
+// For repeating events, roll the stored date forward to the next occurrence
+// after `now` (birthdays auto-roll). One-time events pass through unchanged.
+export function effectiveDate(event, now = Date.now()) {
+  const { date, repeat } = event
+  if (!repeat || repeat === 'none') return date
+  // parse date-only strings as local midnight so day math stays in local time
+  const d = new Date(date.includes('T') ? date : date + 'T00:00')
+  if (d.getTime() > now) return date
+  while (d.getTime() <= now) {
+    if (repeat === 'weekly') d.setDate(d.getDate() + 7)
+    else if (repeat === 'monthly') d.setMonth(d.getMonth() + 1)
+    else d.setFullYear(d.getFullYear() + 1)
+  }
+  const pad = (n) => String(n).padStart(2, '0')
+  const day = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  return date.includes('T') ? `${day}T${date.slice(11)}` : day
+}
+
 export const COUNTDOWN_MODES = [
   { id: 'days', label: 'Days only', tick: 'minute' },
   { id: 'detailed', label: 'Months / days / hours', tick: 'minute' },

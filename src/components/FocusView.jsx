@@ -1,18 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import confetti from 'canvas-confetti'
 import { useNow } from '../hooks/useNow.js'
 import { useIdle } from '../hooks/useIdle.js'
+import { useT0 } from '../hooks/useT0.js'
+import { useCountUp } from '../hooks/useCountUp.js'
+import { useRipple } from '../hooks/useRipple.js'
 import { uid, useStore } from '../state/store.jsx'
+import { effectiveDate } from '../lib/countdown.js'
+import { paceEstimate } from '../lib/pace.js'
+import { goalConfetti } from '../lib/celebrate.js'
 import { MODE_COMPONENTS } from './events/countdownModes.jsx'
 import { VIZ_COMPONENTS } from './goals/vizzes.jsx'
 import { DotMatrix } from './goals/DotMatrix.jsx'
 import { Logo } from './LogoPicker.jsx'
-import { Spline3D, SCENES } from './Spline3D.jsx'
+import { SplitFlap } from './SplitFlap.jsx'
+import { Spline3D, sceneFor } from './Spline3D.jsx'
 import { inputCls } from './ui.jsx'
 
 // Fullscreen view for one tracker. Clicking anywhere except the content
 // toggles the logo between small-above-timer (black bg) and full background.
-export function FocusView({ item, kind, onHome }) {
+export function FocusView({ item, kind, onHome, onShare }) {
   const [bgLogo, setBgLogo] = useState(false)
 
   // Ambient screensaver: after ~5s of no input the chrome fades away and the
@@ -37,6 +43,8 @@ export function FocusView({ item, kind, onHome }) {
     if (Date.now() - wokeAt.current < 400) return
     setBgLogo((b) => !b)
   }
+
+  const displayDate = kind === 'event' ? effectiveDate(item, Date.now()) : null
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh]">
@@ -66,23 +74,22 @@ export function FocusView({ item, kind, onHome }) {
         ) : (
           bgLogo && (
             <>
-              <Spline3D scene={SCENES.cube} dim className="w-full h-full" />
+              <Spline3D scene={sceneFor(item.name)} dim className="w-full h-full" />
               <div className="absolute inset-0 bg-black/30 pointer-events-none" />
             </>
           )
         )}
       </div>
 
-      {/* slight dim while the screensaver is on */}
+      {/* dim layer + one-time wake hint while the screensaver is on */}
       <div
         className={`fixed inset-0 z-20 bg-black pointer-events-none transition-opacity duration-700 ${
           idle ? 'opacity-30' : 'opacity-0'
         }`}
       />
-
       {idle && !hintDone && (
         <p
-          className="zen-hint fixed bottom-10 left-1/2 -translate-x-1/2 mono text-[10px] text-white/50 pointer-events-none"
+          className="zen-hint fixed bottom-10 left-1/2 -translate-x-1/2 z-20 mono text-[10px] text-white/45 pointer-events-none"
           onAnimationEnd={() => setHintDone(true)}
         >
           Move to wake
@@ -104,14 +111,26 @@ export function FocusView({ item, kind, onHome }) {
         </div>
 
         <div className="text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">{item.name}</h2>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+            <SplitFlap text={item.name} />
+          </h2>
           {kind === 'event' && (
             <p className="mono text-[11px] text-white/40 mt-2">
-              {new Date(item.date).toLocaleString(undefined, {
+              {new Date(displayDate).toLocaleString(undefined, {
                 dateStyle: 'full',
-                timeStyle: item.date.includes('T') ? 'short' : undefined,
+                timeStyle: displayDate.includes('T') ? 'short' : undefined,
               })}
+              {item.repeat && item.repeat !== 'none' && ` · ↻ ${item.repeat}`}
             </p>
+          )}
+          {onShare && (
+            <button
+              onClick={() => onShare(item, kind)}
+              className="ui-chrome mono text-[9px] text-white/30 hover:text-white/70 mt-2 transition-colors"
+              title="Copy a link to this tracker"
+            >
+              ⤴ Share
+            </button>
           )}
         </div>
 
@@ -125,9 +144,13 @@ function EventFocus({ event }) {
   const needsSeconds = event.mode === 'live' || event.mode === 'full'
   const now = useNow(needsSeconds ? 1000 : 30000)
   const Mode = MODE_COMPONENTS[event.mode] ?? MODE_COMPONENTS.days
+
+  const date = effectiveDate(event, now)
+  const flash = useT0(new Date(date.includes('T') ? date : date + 'T00:00').getTime(), now)
+
   return (
-    <div className="mt-4">
-      <Mode date={event.date} now={now} big />
+    <div className={`mt-4 ${flash ? 't0-flash' : ''}`}>
+      <Mode date={date} now={now} big />
     </div>
   )
 }
@@ -141,11 +164,12 @@ function GoalFocus({ goal }) {
   const progress = goal.target > 0 ? total / goal.target : 0
   const prevProgress = useRef(progress)
   const Viz = VIZ_COMPONENTS[goal.viz] ?? VIZ_COMPONENTS.sack
+  const pct = useCountUp(Math.round(Math.min(progress, 1) * 100))
+  const rippling = useRipple(goal.contributions.length)
+  const eta = paceEstimate(goal)
 
   useEffect(() => {
-    if (prevProgress.current < 1 && progress >= 1) {
-      confetti({ particleCount: 160, spread: 90, origin: { y: 0.5 } })
-    }
+    goalConfetti(prevProgress.current, progress, { y: 0.5 })
     prevProgress.current = progress
   }, [progress])
 
@@ -168,16 +192,24 @@ function GoalFocus({ goal }) {
     <div className="flex flex-col items-center gap-6 w-full max-w-md">
       <div className="text-center">
         <span className="text-8xl font-bold tabular-nums tracking-tighter">
-          {Math.round(Math.min(progress, 1) * 100)}
+          {pct}
           <span className="text-white/30 text-4xl">%</span>
         </span>
         <p className="mono text-[11px] text-white/40 mt-2">
           {fmt(total)} / {fmt(goal.target)}
           {progress >= 1 && ' · reached'}
         </p>
+        {eta && (
+          <p className="mono text-[10px] text-white/30 mt-1">
+            At this rate →{' '}
+            {eta.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+          </p>
+        )}
       </div>
 
-      <Viz progress={progress} size="w-52 h-52" />
+      <div className={rippling ? 'viz-ripple' : ''}>
+        <Viz progress={progress} size="w-52 h-52" />
+      </div>
       <DotMatrix progress={progress} total={80} cols={40} />
 
       <form onSubmit={addMoney} className="flex gap-2 w-full">

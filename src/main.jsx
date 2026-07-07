@@ -11,3 +11,11 @@ createRoot(document.getElementById('root')).render(
     </StoreProvider>
   </StrictMode>,
 )
+
+// PWA: cache the app shell so an installed Tracko works offline (prod only —
+// a service worker in dev would fight Vite's module server).
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register(import.meta.env.BASE_URL + 'sw.js').catch(() => {})
+  })
+}

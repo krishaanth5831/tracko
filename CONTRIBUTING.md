@@ -32,12 +32,16 @@ First match wins, so put specific keywords above generic ones.
 
 ### Add a goal visualization
 
-Goal visualizations (money sack, thermometer, jar, ring) are swappable — the user picks one per goal in the goal form. Adding a new one is one component plus one registry row, both in `src/components/goals/vizzes.jsx`:
+Goal visualizations (money sack, thermometer, jar, ring, battery, pixel grid, skyline, orbit, vault) are swappable — the user picks one per goal in the goal form. Adding a new one is one component plus one registry row, both in `src/components/goals/vizzes.jsx`:
 
 1. Write a component that takes `{ progress, size }` (`progress` is 0–1, `size` is Tailwind size classes). The existing ones are SVGs whose fill is a rect clipped to the shape's outline — see `MoneySack.jsx` for the technique. Keep the outline monochrome; one accent color for the fill is fine.
 2. Register it in `VIZ_COMPONENTS` and add a `{ id, label }` row to `GOAL_VIZZES`.
 
 Cards, the fullscreen focus view, and the form's picker (which renders a live mini preview at 65%) all pick it up automatically.
+
+### Add a 3D focus-view scene
+
+Trackers without a photo get a lazy-loaded Spline scene as their fullscreen background, picked by keyword — same idea as the emoji table. Publish a grayscale-friendly scene from [Spline](https://spline.design), add its URL to `SCENES` in `src/components/Spline3D.jsx`, and add a `[regex, scene]` row to `SCENE_MAP`.
 
 ## Guidelines
 

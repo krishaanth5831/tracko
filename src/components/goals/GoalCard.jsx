@@ -1,34 +1,37 @@
 import { useEffect, useRef, useState } from 'react'
-import confetti from 'canvas-confetti'
 import { VIZ_COMPONENTS } from './vizzes.jsx'
 import { uid, useStore } from '../../state/store.jsx'
+import { useCountUp } from '../../hooks/useCountUp.js'
+import { useRipple } from '../../hooks/useRipple.js'
+import { useTilt } from '../../hooks/useTilt.js'
+import { paceEstimate } from '../../lib/pace.js'
+import { goalConfetti } from '../../lib/celebrate.js'
 import { inputCls } from '../ui.jsx'
 import { Logo } from '../LogoPicker.jsx'
 import { DotMatrix } from './DotMatrix.jsx'
 
-export function GoalCard({ goal, onEdit, onDelete, onOpen }) {
+export function GoalCard({ goal, onEdit, onDelete, onOpen, onShare, dragProps }) {
   const { dispatch } = useStore()
   const [amount, setAmount] = useState('')
   const [note, setNote] = useState('')
   const [showHistory, setShowHistory] = useState(false)
   const cardRef = useRef(null)
+  const tilt = useTilt()
 
   const total = goal.contributions.reduce((s, c) => s + c.amount, 0)
   const progress = goal.target > 0 ? total / goal.target : 0
   const prevProgress = useRef(progress)
   const Viz = VIZ_COMPONENTS[goal.viz] ?? VIZ_COMPONENTS.sack
+  const pct = useCountUp(Math.round(Math.min(progress, 1) * 100))
+  const rippling = useRipple(goal.contributions.length)
+  const eta = paceEstimate(goal)
 
   useEffect(() => {
-    if (prevProgress.current < 1 && progress >= 1) {
-      const rect = cardRef.current?.getBoundingClientRect()
-      confetti({
-        particleCount: 120,
-        spread: 75,
-        origin: rect
-          ? { x: (rect.left + rect.width / 2) / innerWidth, y: (rect.top + rect.height / 2) / innerHeight }
-          : { y: 0.6 },
-      })
-    }
+    const rect = cardRef.current?.getBoundingClientRect()
+    const origin = rect
+      ? { x: (rect.left + rect.width / 2) / innerWidth, y: (rect.top + rect.height / 2) / innerHeight }
+      : { y: 0.6 }
+    goalConfetti(prevProgress.current, progress, origin)
     prevProgress.current = progress
   }, [progress])
 
@@ -50,26 +53,41 @@ export function GoalCard({ goal, onEdit, onDelete, onOpen }) {
 
   return (
     <div
-      ref={cardRef}
+      ref={(el) => {
+        cardRef.current = el
+        tilt.ref.current = el
+      }}
       onClick={() => onOpen(goal.id)}
-      className="card rounded-2xl p-5 flex flex-col gap-4 pop-in relative group cursor-pointer"
+      onMouseMove={tilt.onMouseMove}
+      onMouseLeave={tilt.onMouseLeave}
+      className="card tilt-card rounded-2xl p-5 flex flex-col gap-4 pop-in relative group cursor-pointer"
+      {...dragProps}
     >
       <div className="flex items-center gap-3">
-        <Logo image={goal.image} emoji={goal.emoji} />
+        <div className="tilt-deep shrink-0">
+          <Logo image={goal.image} emoji={goal.emoji} />
+        </div>
         <div className="min-w-0">
           <h3 className="font-semibold truncate">{goal.name}</h3>
           <p className="mono text-[10px] text-white/35 mt-0.5">
             {fmt(total)} / {fmt(goal.target)}
             {progress >= 1 && ' · reached'}
           </p>
+          {eta && (
+            <p className="mono text-[9px] text-white/25 mt-0.5">
+              At this rate → {eta.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+            </p>
+          )}
         </div>
         <span className="ml-auto text-3xl font-bold tabular-nums tracking-tight shrink-0">
-          {Math.round(Math.min(progress, 1) * 100)}
+          {pct}
           <span className="text-white/30 text-lg">%</span>
         </span>
       </div>
 
-      <Viz progress={progress} />
+      <div className={rippling ? 'viz-ripple' : ''}>
+        <Viz progress={progress} />
+      </div>
 
       <DotMatrix progress={progress} />
 
@@ -130,6 +148,18 @@ export function GoalCard({ goal, onEdit, onDelete, onOpen }) {
       )}
 
       <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {onShare && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onShare(goal, 'goal')
+            }}
+            className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/15 text-xs text-white/60"
+            title="Copy share link"
+          >
+            ⤴
+          </button>
+        )}
         <button
           onClick={(e) => {
             e.stopPropagation()

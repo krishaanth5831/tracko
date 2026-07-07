@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { autoEmoji } from '../../lib/autoLogo.js'
-import { COUNTDOWN_MODES } from '../../lib/countdown.js'
+import { COUNTDOWN_MODES, REPEAT_OPTIONS } from '../../lib/countdown.js'
 import { uid } from '../../state/store.jsx'
 import { Modal, inputCls, btnPrimary } from '../ui.jsx'
 import { LogoPicker } from '../LogoPicker.jsx'
@@ -10,6 +10,7 @@ export function EventForm({ initial, onSave, onClose }) {
   const [date, setDate] = useState(initial?.date?.slice(0, 10) ?? '')
   const [time, setTime] = useState(initial?.date?.includes('T') ? initial.date.slice(11, 16) : '')
   const [mode, setMode] = useState(initial?.mode ?? 'days')
+  const [repeat, setRepeat] = useState(initial?.repeat ?? 'none')
   const [image, setImage] = useState(initial?.image ?? null)
 
   const emoji = autoEmoji(name || 'event')
@@ -24,6 +25,7 @@ export function EventForm({ initial, onSave, onClose }) {
       emoji,
       image,
       mode,
+      repeat,
       createdAt: initial?.createdAt ?? new Date().toISOString(),
     })
   }
@@ -65,6 +67,26 @@ export function EventForm({ initial, onSave, onClose }) {
                 }`}
               >
                 {m.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="mono text-[10px] text-white/40 mb-2">Repeats</p>
+          <div className="grid grid-cols-4 gap-2">
+            {REPEAT_OPTIONS.map((r) => (
+              <button
+                type="button"
+                key={r.id}
+                onClick={() => setRepeat(r.id)}
+                className={`rounded-lg px-2 py-2 text-xs border transition-colors ${
+                  repeat === r.id
+                    ? 'border-white bg-white/10 text-white'
+                    : 'border-white/10 bg-white/5 text-white/50 hover:border-white/30'
+                }`}
+              >
+                {r.label}
               </button>
             ))}
           </div>
