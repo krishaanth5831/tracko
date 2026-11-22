@@ -78,6 +78,8 @@ Trackers are stored per device (there's no sync). To bring your existing ones ov
 
 ## Run it locally
 
+You need [Node.js](https://nodejs.org) 20.19 or newer (22 works too) and npm, which comes with it. There is no backend, no database and no environment variables to set.
+
 ```bash
 git clone https://github.com/krishaanth5831/tracko.git
 cd tracko
@@ -85,9 +87,63 @@ npm install
 npm run dev
 ```
 
+Then open **http://localhost:5173/tracko/** in your browser (note the `/tracko/` at the end: the app is built to live under that path on GitHub Pages). Edits to files in `src/` show up in the browser straight away.
+
+### Scripts
+
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Starts the Vite dev server at http://localhost:5173/tracko/ with hot reload |
+| `npm run build` | Builds the production version into `dist/` |
+| `npm run preview` | Serves the built `dist/` at http://localhost:4173/tracko/, to check the real build (run `npm run build` first) |
+| `npm run lint` | Lints the code with [oxlint](https://oxc.rs) |
+
+There is no test suite yet; `npm run lint && npm run build` is the check to run before a pull request.
+
+**Offline mode only works in the built version.** The service worker (`public/sw.js`) is registered in production builds only, so to try the offline/installable behaviour locally use `npm run build && npm run preview`, not `npm run dev`.
+
+### Where your data lives
+
+Trackers are saved in your browser's localStorage under the key `tracko:v1` (the schema is in `src/state/storage.js`). Clearing site data for the page deletes them, so use **Export** for backups. The only requests Tracko makes to other sites are the optional photo search (the [Openverse](https://openverse.org) API, which receives your search words) and the 3D focus-view scenes, which load from Spline. Your trackers themselves are never sent anywhere.
+
+## Deploy your own copy
+
+Every push to `main` runs [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), which builds the app and publishes `dist/` to GitHub Pages.
+
+To host a fork:
+
+1. Fork the repo and, under **Settings → Pages**, set the source to **GitHub Actions**.
+2. If your fork is not called `tracko`, change `base: '/tracko/'` in `vite.config.js` to `'/<your-repo-name>/'`. The manifest and service worker use relative paths, so that is the only place to change.
+3. Push to `main`. The site appears at `https://<your-username>.github.io/<your-repo-name>/`.
+
+Any static host works too: run `npm run build` and upload the `dist/` folder (with `base` set to the path you serve it from, or `'/'` for a domain root).
+
 ## Tech
 
-Vite + React + Tailwind CSS, plain JavaScript, no backend. 3D: CSS-3D for the exploding pixel-logo hero, lazy-loaded [Spline](https://spline.design) scenes for focus-view backgrounds. See [docs/PRD.md](docs/PRD.md) for the full product spec.
+Vite + React + Tailwind CSS, plain JavaScript, no backend. 3D: CSS-3D for the exploding pixel-logo hero, lazy-loaded [Spline](https://spline.design) scenes for focus-view backgrounds. Confetti from [canvas-confetti](https://github.com/catdad/canvas-confetti). See [docs/PRD.md](docs/PRD.md) for the full product spec.
+
+## Project layout
+
+```
+src/
+  App.jsx                 app shell: tabs, home grid, footer, zen/cycle URL options
+  main.jsx                entry point; registers the service worker in production
+  components/
+    events/               countdown cards, the flip clock and the countdown display modes
+    goals/                goal cards and the nine goal visualizations (vizzes.jsx)
+    FocusView.jsx         fullscreen focus view and ambient screensaver
+    CommandPalette.jsx    the Ctrl+K / ⌘K palette
+    ShareView.jsx         preview screen for shared tracker links
+    Spline3D.jsx          keyword → 3D scene table for focus backgrounds
+    WeeklyReview.jsx      the Monday-morning review strip
+  hooks/                  timers, idle detection, T-0 watcher, count-up, ripple, tilt
+  lib/                    auto-logo table, countdown maths, pace estimate, sharing,
+                          Openverse photo search, image upload, sound, confetti
+  state/                  localStorage schema and migrations (storage.js), app store
+public/                   icons, PWA manifest, service worker
+docs/PRD.md               product spec
+.github/                  Pages deploy workflow, issue templates
+```
 
 ## Contributing
 
