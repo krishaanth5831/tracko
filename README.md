@@ -78,7 +78,7 @@ Trackers are stored per device (there's no sync). To bring your existing ones ov
 
 ## Run it locally
 
-You need [Node.js](https://nodejs.org) 20.19 or newer (22 works too) and npm, which comes with it. There is no backend, no database and no environment variables to set.
+You need [Node.js](https://nodejs.org) 20.19+ or 22.12+ (what Vite 8 supports) and npm, which comes with it. There is no backend, no database and no environment variables to set.
 
 ```bash
 git clone https://github.com/krishaanth5831/tracko.git
@@ -104,7 +104,14 @@ There is no test suite yet; `npm run lint && npm run build` is the check to run 
 
 ### Where your data lives
 
-Trackers are saved in your browser's localStorage under the key `tracko:v1` (the schema is in `src/state/storage.js`). Clearing site data for the page deletes them, so use **Export** for backups. The only requests Tracko makes to other sites are the optional photo search (the [Openverse](https://openverse.org) API, which receives your search words) and the 3D focus-view scenes, which load from Spline. Your trackers themselves are never sent anywhere.
+Trackers are saved in your browser's localStorage under the key `tracko:v1` (the schema is in `src/state/storage.js`). Clearing site data for the page deletes them, so use **Export** for backups. Tracko only talks to other sites for optional pictures: the photo search (the [Openverse](https://openverse.org) API, which receives your search words), a chosen Openverse photo (stored as a link and loaded from the site that hosts it), and the 3D focus-view scenes, which load from Spline. Uploaded pictures are kept in localStorage. Your trackers themselves are never sent anywhere.
+
+### Troubleshooting
+
+- **Blank page on your deployed fork.** The `base` in `vite.config.js` doesn't match the path you serve from (see "Deploy your own copy" below). Locally, http://localhost:5173/ redirects to `/tracko/` by itself.
+- **Offline mode or "Install app" doesn't work locally.** The service worker only runs in the built version: `npm run build && npm run preview`.
+- **`npm install` or `npm run dev` complains about the Node version.** Vite 8 needs Node 20.19+ or 22.12+; check with `node --version`.
+- **A tracker disappeared.** Data is per browser and per device; private windows and "clear site data" wipe it. Keep JSON exports as backups.
 
 ## Deploy your own copy
 
